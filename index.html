@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sudoku Web</title>
+<style>
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 20px;
+    background: #0f172a;
+    color: #e5e7eb;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    display: flex;
+    justify-content: center;
+  }
+
+  .app {
+    max-width: 480px;
+    width: 100%;
+    background: #020617;
+    border-radius: 16px;
+    padding: 20px 18px 24px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+    border: 1px solid #1f2937;
+  }
+
+  h1 {
+    margin: 0 0 12px;
+    text-align: center;
+    font-size: 24px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #f9fafb;
+  }
+
+  .sub {
+    text-align: center;
+    font-size: 12px;
+    color: #9ca3af;
+    margin-bottom: 16px;
+  }
+
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 14px;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .controls-left {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .controls-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+  }
+
+  select, button {
+    border-radius: 999px;
+    border: 1px solid #1f2937;
+    background: #020617;
+    color: #e5e7eb;
+    padding: 6px 12px;
+    font-size: 13px;
+    cursor: pointer;
+    outline: none;
+    transition: background 0.15s, border-color 0.15s, transform 0.03s;
+  }
+
+  select {
+    padding-right: 26px;
+  }
+
+  button.primary {
+    background: #2563eb;
+    border-color: #2563eb;
+  }
+
+  button.danger {
+    background: #7f1d1d;
+    border-color: #7f1d1d;
+  }
+
+  button:hover {
+    background: #111827;
+    border-color: #374151;
+  }
+
+  button.primary:hover {
+    background: #1d4ed8;
+  }
+
+  button.danger:hover {
+    background: #991b1b;
+  }
+
+  button:active {
+    transform: translateY(1px);
+  }
+
+  #timer {
+    font-family: "Roboto Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 14px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: #020617;
+    border: 1px solid #1f2937;
+    min-width: 62px;
+    text-align: center;
+  }
+
+  .board {
+    margin-top: 10px;
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    gap: 0;
+    border: 2px solid #e5e7eb;
+  }
+
+  .cell {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    text-align: center;
+    font-size: 18px;
+    border: 1px solid #4b5563;
+    background: #020617;
+    color: #e5e7eb;
+    outline: none;
+    caret-color: transparent;
+    font-family: "Roboto Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  }
+
+  .cell.active,
+  .cell.related {
+    background: #0b1223;
+  }
+
+  .cell.same-value {
+    background: #0c1a33;
+    color: #bfdbfe;
+  }
+
+  .cell.given {
+    background: #020617;
+    color: #9ca3af;
+    font-weight: 600;
+  }
+
+  .cell:focus {
+    background: #111827;
+    border-color: #3b82f6;
+  }
+
+  .cell.error {
+    background: #450a0a;
+    border-color: #b91c1c;
+    color: #fecaca;
+  }
+
+  .status {
+    margin-top: 10px;
+    min-height: 20px;
+    font-size: 13px;
+  }
+
+  .status.ok {
+    color: #4ade80;
+  }
+
+  .status.warn {
+    color: #facc15;
+  }
+
+  .status.err {
+    color: #f87171;
+  }
+
+  @media (max-width: 480px) {
+    .app {
+      padding: 16px 12px 20px;
+    }
+    h1 {
+      font-size: 20px;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <h1>Sudoku</h1>
+  <div class="sub">Веб-версия. Решай, проверяй, оптимизируй себя по ходу игры.</div>
+
+  <div class="controls">
+    <div class="controls-left">
+      <select id="difficulty">
+        <option value="easy">Лёгкий</option>
+        <option value="medium">Средний</option>
+        <option value="hard">Сложный</option>
+      </select>
+      <button id="newGame" class="primary">Новая игра</button>
+      <button id="reset">Очистить</button>
+    </div>
+    <div class="controls-right">
+      <button id="check">Проверить</button>
+      <button id="solve" class="danger">Решить</button>
+      <button id="pause">Пауза</button>
+      <span id="timer">00:00</span>
+    </div>
+  </div>
+
+  <div id="board" class="board"></div>
+  <div id="status" class="status"></div>
+</div>
+
+<script>
+/*
+  Простая модель: заранее зашитые головоломки.
+  Можно расширить массивы puzzles.easy / medium / hard.
+*/
+
+const puzzles = {
+  easy: [
+    {
+      // Классическая простая задача
+      p: "530070000600195000098000060800060003400803001700020006060000280000419005000080079",
+      s: "534678912672195348198342567859761423426853791713924856961537284287419635345286179"
+    },
+    {
+      p: "060000012000000093320094006100003040050069100070200300007050000000800420430900000",
+      s: "964378512715642893328594176186753249254169137973281364897425631659817425432936758"
+    },
+    {
+      p: "408060030020500900700080010010000040300020007040000050070090002002007060050010804",
+      s: "458761239123594978796382415517836249369425187248179356874698132982347561631215894"
+    }
+  ],
+  medium: [
+    {
+      p: "000260701680070090190004500820100040004602900050003028009300074040050036703018000",
+      s: "435269781682571493197834562826195347374682915951743628519326874248957136763418259"
+    },
+    {
+      p: "030009040806000070000430802000300010004802700050001000201084000060000108090700020",
+      s: "732189546846253971915476832689347215134862759257591364321684597563925148498718623"
+    },
+    {
+      p: "400900000020006000000014039600000580240070000000080064000000090000350072001000430",
+      s: "413927856829536147765814239637149582248675913195382764352461798984353672571298431"
+    }
+  ],
+  hard: [
+    {
+      p: "000000907000420180000705026100904000050000040000507009920108000034059000507000000",
+      s: "843261957795423186216795326172934865359816742468527319924178653634559271587642493"
+    },
+    {
+      p: "003006001000090000407000060040003800500402000060017000024030700000700008100000050",
+      s: "983276541612594387457381962241963875578452193369817254824135769395728418176649523"
+    },
+    {
+      p: "005000000040600030072050800000000902000708004010206000054007080090010406600900000",
+      s: "185342679249671538372859861867134952523798614914286357654927183798513426631965742"
+    }
+  ]
+};
+
+let currentPuzzle = null;
+let timerInterval = null;
+let elapsedSeconds = 0;
+let paused = false;
+
+function createBoard() {
+  const board = document.getElementById('board');
+  board.innerHTML = "";
+
+  for (let i = 0; i < 81; i++) {
+    const input = document.createElement('input');
+    input.type = "text";
+    input.maxLength = 1;
+    input.className = "cell";
+    input.dataset.index = i;
+
+    const row = Math.floor(i / 9);
+    const col = i % 9;
+
+    // Толстые границы между 3×3 блоками
+    if (col === 3 || col === 6) {
+      input.style.borderLeftWidth = "3px";
+    }
+    if (col === 2 || col === 5) {
+      input.style.borderRightWidth = "3px";
+    }
+    if (row === 3 || row === 6) {
+      input.style.borderTopWidth = "3px";
+    }
+    if (row === 2 || row === 5) {
+      input.style.borderBottomWidth = "3px";
+    }
+
+    input.addEventListener('input', onCellInput);
+    input.addEventListener('keydown', onCellKeyDown);
+    input.addEventListener('focus', () => highlightRelated(i));
+    input.addEventListener('blur', clearHighlights);
+
+    board.appendChild(input);
+  }
+}
+
+function onCellInput(e) {
+  const cell = e.target;
+  let val = cell.value.replace(/[^1-9]/g, "");
+  if (val.length > 1) val = val[0];
+  cell.value = val;
+  cell.classList.remove('error');
+  setStatus("");
+  clearHighlights();
+  highlightRelated(Number(cell.dataset.index));
+  flagConflicts();
+}
+
+function onCellKeyDown(e) {
+  const index = Number(e.target.dataset.index);
+  if (e.key === "ArrowRight") {
+    focusCell((index + 1) % 81);
+    e.preventDefault();
+  } else if (e.key === "ArrowLeft") {
+    focusCell((index + 80) % 81); // -1 mod 81
+    e.preventDefault();
+  } else if (e.key === "ArrowDown") {
+    focusCell((index + 9) % 81);
+    e.preventDefault();
+  } else if (e.key === "ArrowUp") {
+    focusCell((index + 72) % 81); // -9 mod 81
+    e.preventDefault();
+  } else if (e.key === "Backspace" || e.key === "Delete") {
+    if (!e.target.classList.contains('given')) {
+      e.target.value = "";
+      e.target.classList.remove('error');
+    }
+  }
+}
+
+function clearHighlights() {
+  document.querySelectorAll('.cell').forEach(c => {
+    c.classList.remove('active', 'related', 'same-value');
+  });
+}
+
+function highlightRelated(index) {
+  const cells = document.querySelectorAll('.cell');
+  const active = cells[index];
+  if (!active) return;
+
+  clearHighlights();
+  active.classList.add('active');
+
+  const row = Math.floor(index / 9);
+  const col = index % 9;
+  const val = active.value;
+
+  cells.forEach((cell, i) => {
+    const r = Math.floor(i / 9);
+    const c = i % 9;
+    const inBlock = Math.floor(r / 3) === Math.floor(row / 3) && Math.floor(c / 3) === Math.floor(col / 3);
+    if (r === row || c === col || inBlock) {
+      cell.classList.add('related');
+    }
+    if (val && cell.value === val) {
+      cell.classList.add('same-value');
+    }
+  });
+}
+
+function flagConflicts() {
+  const cells = document.querySelectorAll('.cell');
+  cells.forEach(cell => cell.classList.remove('error'));
+
+  const hasConflict = (indexes) => {
+    const seen = {};
+    indexes.forEach(i => {
+      const v = cells[i].value;
+      if (!v) return;
+      if (seen[v]) {
+        cells[i].classList.add('error');
+        cells[seen[v] - 1].classList.add('error');
+      } else {
+        seen[v] = i + 1;
+      }
+    });
+  };
+
+  // Rows and columns
+  for (let r = 0; r < 9; r++) {
+    const rowIdx = Array.from({ length: 9 }, (_, i) => r * 9 + i);
+    hasConflict(rowIdx);
+  }
+  for (let c = 0; c < 9; c++) {
+    const colIdx = Array.from({ length: 9 }, (_, i) => i * 9 + c);
+    hasConflict(colIdx);
+  }
+
+  // Blocks
+  for (let br = 0; br < 3; br++) {
+    for (let bc = 0; bc < 3; bc++) {
+      const blockIdx = [];
+      for (let r = 0; r < 3; r++) {
+        for (let c = 0; c < 3; c++) {
+          blockIdx.push((br * 3 + r) * 9 + (bc * 3 + c));
+        }
+      }
+      hasConflict(blockIdx);
+    }
+  }
+
+  const any = Array.from(cells).some(c => c.classList.contains('error'));
+  if (any) setStatus('Есть конфликты по строкам, столбцам или блокам.', 'warn');
+}
+
+function focusCell(i) {
+  const cells = document.querySelectorAll('.cell');
+  if (cells[i]) cells[i].focus();
+}
+
+function loadRandomPuzzle() {
+  const difficulty = document.getElementById('difficulty').value;
+  const pool = puzzles[difficulty];
+  const idx = Math.floor(Math.random() * pool.length);
+  currentPuzzle = pool[idx];
+
+  const p = currentPuzzle.p;
+  const cells = document.querySelectorAll('.cell');
+
+  cells.forEach((cell, i) => {
+    const char = p[i];
+    cell.classList.remove('given', 'error');
+    cell.disabled = false;
+
+    if (char !== "0" && char !== ".") {
+      cell.value = char;
+      cell.disabled = true;
+      cell.classList.add('given');
+    } else {
+      cell.value = "";
+    }
+  });
+
+  resetTimer();
+  startTimer();
+  setStatus("Новая задача загружена.", "ok");
+  clearHighlights();
+  document.getElementById('pause').textContent = 'Пауза';
+}
+
+function checkSolution() {
+  if (!currentPuzzle) return;
+  const solution = currentPuzzle.s;
+  const cells = document.querySelectorAll('.cell');
+
+  let errors = 0;
+  let empty = 0;
+
+  cells.forEach((cell, i) => {
+    if (cell.disabled) return;
+    const val = cell.value;
+    if (!val) {
+      empty++;
+      cell.classList.remove('error');
+      return;
+    }
+    if (val !== solution[i]) {
+      cell.classList.add('error');
+      errors++;
+    } else {
+      cell.classList.remove('error');
+    }
+  });
+
+  flagConflicts();
+
+  if (errors === 0 && empty === 0) {
+    stopTimer();
+    setStatus("Идеально. Судоку решено корректно.", "ok");
+  } else if (errors === 0 && empty > 0) {
+    setStatus("Ошибок нет, но поле ещё не заполнено.", "warn");
+  } else {
+    setStatus(`Ошибки: ${errors}. Подчёркнутые клетки проверь ещё раз.`, "err");
+  }
+}
+
+function solvePuzzle() {
+  if (!currentPuzzle) return;
+  const solution = currentPuzzle.s;
+  const cells = document.querySelectorAll('.cell');
+
+  cells.forEach((cell, i) => {
+    cell.value = solution[i];
+    cell.classList.remove('error');
+  });
+
+  stopTimer();
+  setStatus("Решение подставлено. Можно брать как эталон.", "warn");
+}
+
+function resetBoard() {
+  const cells = document.querySelectorAll('.cell');
+  cells.forEach(cell => {
+    if (!cell.classList.contains('given')) {
+      cell.value = "";
+      cell.classList.remove('error');
+    }
+  });
+  clearHighlights();
+  setStatus("Поле очищено, можно пробовать снова.", "ok");
+  flagConflicts();
+}
+
+/* Таймер */
+
+function startTimer() {
+  stopTimer();
+  elapsedSeconds = 0;
+  updateTimerLabel();
+  timerInterval = setInterval(() => {
+    if (!paused) {
+      elapsedSeconds++;
+      updateTimerLabel();
+    }
+  }, 1000);
+}
+
+function resetTimer() {
+  stopTimer();
+  elapsedSeconds = 0;
+  updateTimerLabel();
+}
+
+function stopTimer() {
+  if (timerInterval) {
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+  paused = false;
+  const pauseBtn = document.getElementById('pause');
+  if (pauseBtn) pauseBtn.textContent = 'Пауза';
+}
+
+function updateTimerLabel() {
+  const m = String(Math.floor(elapsedSeconds / 60)).padStart(2, "0");
+  const s = String(elapsedSeconds % 60).padStart(2, "0");
+  document.getElementById('timer').textContent = `${m}:${s}`;
+}
+
+function togglePause() {
+  if (!timerInterval) return;
+  paused = !paused;
+  document.getElementById('pause').textContent = paused ? 'Продолжить' : 'Пауза';
+  setStatus(paused ? 'Таймер на паузе.' : 'Продолжаем.', paused ? 'warn' : '');
+}
+
+/* Статус */
+
+function setStatus(text, type = "") {
+  const el = document.getElementById('status');
+  el.textContent = text || "";
+  el.className = "status" + (type ? " " + type : "");
+}
+
+/* Инициализация */
+
+window.addEventListener('DOMContentLoaded', () => {
+  createBoard();
+
+  document.getElementById('newGame').addEventListener('click', loadRandomPuzzle);
+  document.getElementById('check').addEventListener('click', checkSolution);
+  document.getElementById('solve').addEventListener('click', solvePuzzle);
+  document.getElementById('reset').addEventListener('click', resetBoard);
+  document.getElementById('pause').addEventListener('click', togglePause);
+  document.getElementById('difficulty').addEventListener('change', loadRandomPuzzle);
+
+  // Автостарт первой игры
+  loadRandomPuzzle();
+});
+</script>
+</body>
+</html>
