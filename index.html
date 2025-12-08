@@ -1,446 +1,1452 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="uk">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sudoku Web</title>
-<style>
-  * { box-sizing: border-box; }
+  <meta charset="UTF-8" />
+  <title>Тактичні танки — тактична версія</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
 
-  body {
-    margin: 0;
-    padding: 20px;
-    background: #0f172a;
-    color: #e5e7eb;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    display: flex;
-    justify-content: center;
-  }
+  <style>
+    * { box-sizing: border-box; margin:0; padding:0; }
 
-  .app {
-    max-width: 480px;
-    width: 100%;
-    background: #020617;
-    border-radius: 16px;
-    padding: 20px 18px 24px;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.6);
-    border: 1px solid #1f2937;
-  }
-
-  h1 {
-    margin: 0 0 12px;
-    text-align: center;
-    font-size: 24px;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: #f9fafb;
-  }
-
-  .sub {
-    text-align: center;
-    font-size: 12px;
-    color: #9ca3af;
-    margin-bottom: 16px;
-  }
-
-  .controls {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 14px;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .controls-left {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-  }
-
-  .controls-right {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-left: auto;
-  }
-
-  select, button {
-    border-radius: 999px;
-    border: 1px solid #1f2937;
-    background: #020617;
-    color: #e5e7eb;
-    padding: 6px 12px;
-    font-size: 13px;
-    cursor: pointer;
-    outline: none;
-    transition: background 0.15s, border-color 0.15s, transform 0.03s;
-  }
-
-  select {
-    padding-right: 26px;
-  }
-
-  button.primary {
-    background: #2563eb;
-    border-color: #2563eb;
-  }
-
-  button.danger {
-    background: #7f1d1d;
-    border-color: #7f1d1d;
-  }
-
-  button:hover {
-    background: #111827;
-    border-color: #374151;
-  }
-
-  button.primary:hover {
-    background: #1d4ed8;
-  }
-
-  button.danger:hover {
-    background: #991b1b;
-  }
-
-  button:active {
-    transform: translateY(1px);
-  }
-
-  #timer {
-    font-family: "Roboto Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-    font-size: 14px;
-    padding: 4px 10px;
-    border-radius: 999px;
-    background: #020617;
-    border: 1px solid #1f2937;
-    min-width: 62px;
-    text-align: center;
-  }
-
-  .board {
-    margin-top: 10px;
-    display: grid;
-    grid-template-columns: repeat(9, 1fr);
-    gap: 0;
-    border: 2px solid #e5e7eb;
-  }
-
-  .cell {
-    width: 100%;
-    aspect-ratio: 1 / 1;
-    text-align: center;
-    font-size: 18px;
-    border: 1px solid #4b5563;
-    background: #020617;
-    color: #e5e7eb;
-    outline: none;
-    caret-color: transparent;
-    font-family: "Roboto Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  }
-
-  .cell.given {
-    background: #020617;
-    color: #9ca3af;
-    font-weight: 600;
-  }
-
-  .cell:focus {
-    background: #111827;
-    border-color: #3b82f6;
-  }
-
-  .cell.error {
-    background: #450a0a;
-    border-color: #b91c1c;
-    color: #fecaca;
-  }
-
-  .status {
-    margin-top: 10px;
-    min-height: 20px;
-    font-size: 13px;
-  }
-
-  .status.ok {
-    color: #4ade80;
-  }
-
-  .status.warn {
-    color: #facc15;
-  }
-
-  .status.err {
-    color: #f87171;
-  }
-
-  @media (max-width: 480px) {
-    .app {
-      padding: 16px 12px 20px;
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 0% 0%, #020617 0, #020617 30%, #020617 60%, #020617 100%),
+        radial-gradient(circle at 120% 120%, #064e3b 0, #020617 60%);
+      color: #e5e7eb;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 12px;
     }
-    h1 {
-      font-size: 20px;
+
+    .game-root {
+      display: flex;
+      gap: 12px;
+      width: 100%;
+      max-width: 1120px;
+      flex-wrap: wrap;
     }
-  }
-</style>
+
+    /* ===== BOARD (настольная карта) ===== */
+
+    .board-wrapper {
+      flex: 0 0 auto;
+      padding: 10px;
+      border-radius: 22px;
+      background:
+        radial-gradient(circle at 0 0, rgba(163, 230, 53, 0.12), transparent 60%),
+        radial-gradient(circle at 100% 100%, rgba(21, 128, 61, 0.28), transparent 60%),
+        linear-gradient(145deg, #020617, #020617);
+      box-shadow:
+        0 18px 45px rgba(0, 0, 0, 0.85),
+        inset 0 0 0 1px rgba(55, 65, 81, 0.55);
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(12, 30px);
+      grid-template-rows: repeat(12, 30px);
+      gap: 3px;
+    }
+
+    @media (min-width: 768px) {
+      .board {
+        grid-template-columns: repeat(12, 36px);
+        grid-template-rows: repeat(12, 36px);
+        gap: 4px;
+      }
+    }
+
+    .cell {
+      position: relative;
+      border-radius: 8px;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      width: 30px;
+      height: 30px;
+      font-size: 11px;
+      cursor:pointer;
+      background:
+        radial-gradient(circle at 30% 20%, rgba(148,163,184,0.20), transparent 55%),
+        radial-gradient(circle at 80% 120%, rgba(15,23,42,0.85), #020617);
+      box-shadow:
+        inset 0 0 0 1px rgba(15,23,42,0.95),
+        0 3px 8px rgba(0,0,0,0.65);
+      transition:
+        transform .15s ease-out,
+        box-shadow .18s ease-out,
+        filter .25s ease-out;
+    }
+
+    .cell:hover {
+      transform: translateY(-2px);
+      box-shadow:
+        0 6px 14px rgba(0,0,0,0.9),
+        inset 0 0 0 1px rgba(148,163,184,0.25);
+    }
+
+    /* Ландшафт */
+
+    .terrain-plain {
+      background:
+        radial-gradient(circle at 25% 15%, rgba(148,163,184,0.25), transparent 55%),
+        linear-gradient(135deg, #111827, #020617);
+    }
+    .terrain-forest {
+      background:
+        radial-gradient(circle at 20% 0, rgba(74,222,128,0.45), transparent 60%),
+        linear-gradient(135deg, #022c22, #041f1a);
+    }
+    .terrain-hill {
+      background:
+        radial-gradient(circle at 80% 0, rgba(250, 204, 21, 0.35), transparent 60%),
+        linear-gradient(135deg, #374151, #111827);
+    }
+    .terrain-water {
+      background:
+        radial-gradient(circle at 20% 0, rgba(56,189,248,0.6), transparent 55%),
+        linear-gradient(135deg, #020617, #020617);
+    }
+    .terrain-city {
+      background:
+        repeating-linear-gradient(
+          45deg,
+          rgba(148,163,184,0.35),
+          rgba(148,163,184,0.35) 6px,
+          rgba(75,85,99,0.75) 6px,
+          rgba(75,85,99,0.75) 12px
+        ),
+        linear-gradient(135deg, #111827, #020617);
+    }
+
+    /* Туман войны */
+
+    .fog {
+      filter: brightness(0.18) grayscale(0.95) blur(0.8px);
+      box-shadow:
+        inset 0 0 0 1px rgba(15,23,42,0.95),
+        0 2px 6px rgba(0,0,0,0.9);
+    }
+    .fog .tank { opacity: 0; }
+
+    .fog-reveal {
+      animation: fogReveal .5s ease-out;
+    }
+    @keyframes fogReveal {
+      from { filter: brightness(0) blur(3px); }
+      to   { filter: brightness(0.18) blur(0.8px); }
+    }
+
+    /* ===== ТАНКИ (SVG-фишки) ===== */
+
+    .tank {
+      width: 26px;
+      height: 26px;
+      border-radius: 10px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:700;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .tank svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* P1 – зелёно-тактический */
+    .p1 {
+      background:
+        radial-gradient(circle at 20% 0, rgba(248,250,252,0.28), transparent 60%),
+        linear-gradient(145deg, #22c55e, #15803d);
+      box-shadow:
+        0 0 0 1px rgba(4,46,18,0.95),
+        0 4px 10px rgba(21,128,61,0.65);
+      color:#020617;
+    }
+
+    /* P2 – оранжево-боевой */
+    .p2 {
+      background:
+        radial-gradient(circle at 20% 0, rgba(248,250,252,0.28), transparent 60%),
+        linear-gradient(145deg, #f97316, #c2410c);
+      box-shadow:
+        0 0 0 1px rgba(88,28,16,0.95),
+        0 4px 10px rgba(234,88,12,0.75);
+      color:#020617;
+    }
+
+    .tank::after {
+      content: attr(data-type);
+      position:absolute;
+      bottom:2px;
+      right:4px;
+      font-size:8px;
+      font-weight:800;
+      color:rgba(15,23,42,0.9);
+      text-shadow:0 0 3px rgba(248,250,252,0.9);
+    }
+
+    .selected {
+      outline: 2px solid #facc15;
+      outline-offset: 0;
+      box-shadow:
+        0 0 0 2px rgba(250,204,21,0.75),
+        0 0 24px rgba(250,204,21,0.45);
+    }
+
+    .move-highlight {
+      box-shadow:
+        inset 0 0 0 2px rgba(34,197,94,0.9),
+        0 0 14px rgba(34,197,94,0.75);
+    }
+
+    .attack-highlight {
+      box-shadow:
+        inset 0 0 0 2px rgba(248,113,113,0.95),
+        0 0 16px rgba(248,113,113,0.9);
+    }
+
+    .tank-hit {
+      animation: tankHit .18s ease-out;
+    }
+    @keyframes tankHit {
+      0%   { transform: scale(1); filter: brightness(2); }
+      100% { transform: scale(1); filter: brightness(1); }
+    }
+
+    /* ===== SIDEBAR / ПАНЕЛИ ===== */
+
+    .sidebar {
+      flex: 1 1 290px;
+      min-width: 280px;
+      max-height: 92vh;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .panel {
+      background:
+        radial-gradient(circle at 0 0, rgba(148,163,184,0.20), transparent 70%),
+        radial-gradient(circle at 100% 100%, rgba(34,197,94,0.18), transparent 70%),
+        linear-gradient(145deg, #020617, #020617);
+      padding:10px;
+      border-radius:18px;
+      box-shadow:
+        0 14px 34px rgba(0,0,0,0.9),
+        inset 0 0 0 1px rgba(30,64,175,0.22);
+      font-size:13px;
+    }
+
+    h2 {
+      font-size:16px;
+      margin-bottom:6px;
+      font-weight:700;
+      letter-spacing:0.3px;
+    }
+
+    h3 {
+      font-size:14px;
+      margin-bottom:4px;
+      font-weight:600;
+    }
+
+    label {
+      font-size:11px;
+      margin-bottom:4px;
+      display:block;
+      color:#9ca3af;
+    }
+
+    select {
+      width:100%;
+      padding:6px 8px;
+      border-radius:999px;
+      border:1px solid rgba(55,65,81,0.9);
+      background:
+        radial-gradient(circle at 0 0, rgba(148,163,184,0.2), transparent 70%),
+        #020617;
+      color:#f9fafb;
+      font-size:12px;
+      outline:none;
+    }
+    select:focus {
+      border-color:#facc15;
+      box-shadow:0 0 0 1px rgba(250,204,21,0.85);
+    }
+
+    .btn-row {
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:8px;
+    }
+
+    button {
+      border:none;
+      border-radius:999px;
+      padding:8px 14px;
+      font-size:13px;
+      font-weight:700;
+      cursor:pointer;
+      letter-spacing:0.25px;
+      transition:
+        background .18s ease-out,
+        transform .1s ease-out,
+        box-shadow .2s ease-out;
+    }
+    button:active {
+      transform:translateY(1px) scale(0.99);
+      box-shadow:none;
+    }
+    button:disabled {
+      opacity:0.55;
+      cursor:not-allowed;
+      box-shadow:none;
+      transform:none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #facc15, #f97316);
+      color:#020617;
+      box-shadow:
+        0 8px 18px rgba(234,179,8,0.7),
+        0 0 0 1px rgba(120,53,15,0.9);
+    }
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #fde047, #fb923c);
+    }
+
+    .btn-secondary {
+      background:
+        radial-gradient(circle at 0 0, rgba(148,163,184,0.4), transparent 55%),
+        linear-gradient(135deg, #020617, #111827);
+      color:#e5e7eb;
+      box-shadow:
+        0 6px 14px rgba(15,23,42,0.9),
+        inset 0 0 0 1px rgba(75,85,99,0.95);
+    }
+    .btn-secondary:hover {
+      background: linear-gradient(135deg, #111827, #020617);
+    }
+
+    .btn-danger {
+      background: linear-gradient(135deg, #ef4444, #b91c1c);
+      color:#fef2f2;
+      box-shadow:
+        0 8px 18px rgba(248,113,113,0.8),
+        0 0 0 1px rgba(127,29,29,0.95);
+    }
+    .btn-danger:hover {
+      background: linear-gradient(135deg, #f87171, #b91c1c);
+    }
+
+    .btn-commander {
+      background: linear-gradient(135deg, #4ade80, #16a34a);
+      color:#052e16;
+      box-shadow:
+        0 8px 18px rgba(74,222,128,0.85),
+        0 0 0 1px rgba(21,128,61,0.95);
+    }
+    .btn-commander:hover {
+      background: linear-gradient(135deg, #bbf7d0, #22c55e);
+    }
+
+    .log {
+      max-height:210px;
+      overflow-y:auto;
+      font-size:12px;
+      line-height:1.35;
+      padding-right:2px;
+    }
+    .log-entry {
+      margin-bottom:3px;
+      color:#e5e7eb;
+    }
+
+    .stat-line { margin-bottom:3px; }
+
+    .tag {
+      display:inline-flex;
+      align-items:center;
+      padding:3px 8px;
+      border-radius:999px;
+      font-size:11px;
+      background:rgba(15,23,42,0.98);
+      color:#e5e7eb;
+      border:1px solid rgba(55,65,81,0.9);
+      margin-right:5px;
+      gap:4px;
+    }
+
+    .energy-bar {
+      margin-top:4px;
+      font-size:12px;
+      color:#facc15;
+    }
+
+    #selectedInfo {
+      font-size:12px;
+    }
+
+    @media (max-width: 640px) {
+      body { padding:8px; }
+      .sidebar { max-height:none; }
+      .panel { border-radius:16px; padding:8px; }
+      .board-wrapper { width:100%; justify-content:center; }
+    }
+  </style>
 </head>
 <body>
-<div class="app">
-  <h1>Sudoku</h1>
-  <div class="sub">Веб-версия. Решай, проверяй, оптимизируй себя по ходу игры.</div>
+<div class="game-root">
 
-  <div class="controls">
-    <div class="controls-left">
-      <select id="difficulty">
-        <option value="easy">Лёгкий</option>
-        <option value="medium">Средний</option>
-        <option value="hard">Сложный</option>
-      </select>
-      <button id="newGame" class="primary">Новая игра</button>
-    </div>
-    <div class="controls-right">
-      <button id="check">Проверить</button>
-      <button id="solve" class="danger">Решить</button>
-      <span id="timer">00:00</span>
-    </div>
+  <!-- SVG-спрайт танков -->
+  <svg aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden">
+    <defs>
+      <!-- TT – тяжёлый танк -->
+      <symbol id="icon-tank-TT" viewBox="0 0 64 64">
+        <rect x="10" y="18" width="44" height="36" rx="10" ry="10"
+              fill="none" stroke="currentColor" stroke-width="4" />
+        <rect x="20" y="24" width="24" height="24" rx="6" ry="6"
+              fill="none" stroke="currentColor" stroke-width="4" />
+        <rect x="28" y="8" width="8" height="18" rx="3"
+              fill="none" stroke="currentColor" stroke-width="4" />
+        <rect x="14" y="46" width="36" height="6" rx="3"
+              fill="none" stroke="currentColor" stroke-width="4" />
+      </symbol>
+
+      <!-- ST – середний -->
+      <symbol id="icon-tank-ST" viewBox="0 0 64 64">
+        <rect x="12" y="20" width="40" height="30" rx="9"
+              fill="none" stroke="currentColor" stroke-width="4" />
+        <rect x="22" y="24" width="20" height="18" rx="5"
+              fill="none" stroke="currentColor" stroke-width="4" />
+        <rect x="30" y="10" width="6" height="14" rx="3"
+              fill="none" stroke="currentColor" stroke-width="4" />
+        <rect x="18" y="44" width="28" height="5" rx="2.5"
+              fill="none" stroke="currentColor" stroke-width="4" />
+      </symbol>
+
+      <!-- LT – лёгкий -->
+      <symbol id="icon-tank-LT" viewBox="0 0 64 64">
+        <rect x="14" y="24" width="36" height="22" rx="9"
+              fill="none" stroke="currentColor" stroke-width="4" />
+        <rect x="24" y="26" width="16" height="14" rx="4"
+              fill="none" stroke="currentColor" stroke-width="4" />
+        <rect x="32" y="12" width="5" height="12" rx="2.5"
+              fill="none" stroke="currentColor" stroke-width="4" />
+      </symbol>
+
+      <!-- AT – артиллерія -->
+      <symbol id="icon-tank-AT" viewBox="0 0 64 64">
+        <rect x="14" y="26" width="36" height="18" rx="6"
+              fill="none" stroke="currentColor" stroke-width="4" />
+        <rect x="22" y="30" width="20" height="10" rx="4"
+              fill="none" stroke="currentColor" stroke-width="4" />
+        <rect x="32" y="10" width="20" height="6" rx="3"
+              fill="none" stroke="currentColor" stroke-width="4" />
+      </symbol>
+
+      <!-- PT – ПТ-САУ -->
+      <symbol id="icon-tank-PT" viewBox="0 0 64 64">
+        <rect x="12" y="22" width="40" height="22" rx="8"
+              fill="none" stroke="currentColor" stroke-width="4" />
+        <rect x="24" y="24" width="16" height="12" rx="4"
+              fill="none" stroke="currentColor" stroke-width="4" />
+        <rect x="36" y="14" width="14" height="5" rx="2.5"
+              fill="none" stroke="currentColor" stroke-width="4" />
+      </symbol>
+
+      <!-- RC – розвідник -->
+      <symbol id="icon-tank-RC" viewBox="0 0 64 64">
+        <rect x="14" y="26" width="36" height="16" rx="9"
+              fill="none" stroke="currentColor" stroke-width="4" />
+        <rect x="24" y="28" width="16" height="10" rx="4"
+              fill="none" stroke="currentColor" stroke-width="4" />
+        <line x1="20" y1="18" x2="20" y2="10"
+              stroke="currentColor" stroke-width="3" stroke-linecap="round" />
+        <circle cx="20" cy="8" r="2.2"
+                fill="none" stroke="currentColor" stroke-width="2.4" />
+      </symbol>
+    </defs>
+  </svg>
+
+  <!-- Доска -->
+  <div class="board-wrapper">
+    <div id="board" class="board"></div>
   </div>
 
-  <div id="board" class="board"></div>
-  <div id="status" class="status"></div>
+  <!-- Панели -->
+  <div class="sidebar">
+    <div class="panel">
+      <h2>Налаштування командирів</h2>
+      <label for="commanderP1">Командир Player 1</label>
+      <select id="commanderP1">
+        <option value="BLITZ">Бліцкриг (агресія)</option>
+        <option value="WALL">Сталева стіна (оборона)</option>
+        <option value="ARTY">Маршал артилерії</option>
+        <option value="SCOUT">Майстер розвідки</option>
+      </select>
+
+      <label for="commanderP2" style="margin-top:6px;">Командир Player 2</label>
+      <select id="commanderP2">
+        <option value="WALL">Сталева стіна (оборона)</option>
+        <option value="BLITZ">Бліцкриг (агресія)</option>
+        <option value="ARTY">Маршал артилерії</option>
+        <option value="SCOUT">Майстер розвідки</option>
+      </select>
+
+      <div class="btn-row" style="margin-top:8px;">
+        <button id="startBtn" class="btn-primary">Нова гра</button>
+      </div>
+      <div style="font-size:11px;opacity:0.8;margin-top:4px;">
+        Вибери командирів для обох гравців та натисни «Нова гра».
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Хід гри</h2>
+      <div id="turnInfo"></div>
+      <div id="energyInfo" class="energy-bar"></div>
+      <div class="btn-row">
+        <button id="commanderAbilityBtn" class="btn-commander">Здібність командира</button>
+        <button id="endTurnBtn" class="btn-secondary">Завершити хід</button>
+        <button id="aiMoveBtn" class="btn-secondary">Хід ІІ (Player 2)</button>
+        <button id="resetBtn" class="btn-danger">Скинути поле</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Обраний танк</h3>
+      <div id="selectedInfo">Нічого не вибрано</div>
+    </div>
+
+    <div class="panel">
+      <h3>Лог бою</h3>
+      <div id="log" class="log"></div>
+    </div>
+
+    <div class="panel">
+      <h3>Підказки</h3>
+      <div style="font-size:12px;opacity:0.85;">
+        • Обери командирів і натисни «Нова гра».<br/>
+        • Торкнись свого танка, щоб вибрати його.<br/>
+        • Зелені клітинки — куди можна піти.<br/>
+        • Червоні клітинки — кого можна атакувати.<br/>
+        • Туман війни приховує ворогів, яких ти не бачиш.<br/>
+        • Енергія + здібність командира дають тактичну перевагу.
+      </div>
+    </div>
+  </div>
 </div>
 
-<script>
-/*
-  Простая модель: заранее зашитые головоломки.
-  Можно расширить массивы puzzles.easy / medium / hard.
-*/
-
-const puzzles = {
-  easy: [
-    {
-      // Классическая простая задача
-      p: "530070000600195000098000060800060003400803001700020006060000280000419005000080079",
-      s: "534678912672195348198342567859761423426853791713924856961537284287419635345286179"
+<script type="module">
+/* ========= CONFIG ========= */
+const CONFIG = {
+  gridWidth: 12,
+  gridHeight: 12,
+  maxTurns: 16,
+  terrainChances: {
+    forest: 0.08,
+    hill:   0.05,
+    water:  0.05,
+    city:   0.05,
+    plain:  0.77
+  },
+  tankDefs: {
+    TT: {
+      code: 'TT',
+      name: 'Тяжкий танк',
+      maxHealth: 28,
+      minDamage: 4,
+      maxDamage: 6,
+      attackRange: 2,
+      moveRange: 2,
+      actionPointsMax: 4,
+      visionRange: 3
+    },
+    ST: {
+      code: 'ST',
+      name: 'Середній танк',
+      maxHealth: 20,
+      minDamage: 3,
+      maxDamage: 5,
+      attackRange: 3,
+      moveRange: 3,
+      actionPointsMax: 5,
+      visionRange: 4
+    },
+    LT: {
+      code: 'LT',
+      name: 'Легкий танк',
+      maxHealth: 12,
+      minDamage: 2,
+      maxDamage: 4,
+      attackRange: 3,
+      moveRange: 5,
+      actionPointsMax: 6,
+      visionRange: 5
+    },
+    AT: {
+      code: 'AT',
+      name: 'Артилерія',
+      maxHealth: 10,
+      minDamage: 5,
+      maxDamage: 8,
+      attackRange: 6,
+      moveRange: 1,
+      actionPointsMax: 3,
+      visionRange: 3
+    },
+    PT: {
+      code: 'PT',
+      name: 'ПТ-САУ',
+      maxHealth: 16,
+      minDamage: 4,
+      maxDamage: 6,
+      attackRange: 4,
+      moveRange: 2,
+      actionPointsMax: 4,
+      visionRange: 4
+    },
+    RC: {
+      code: 'RC',
+      name: 'Розвідник',
+      maxHealth: 10,
+      minDamage: 1,
+      maxDamage: 2,
+      attackRange: 2,
+      moveRange: 6,
+      actionPointsMax: 7,
+      visionRange: 7
     }
-  ],
-  medium: [
-    {
-      p: "000260701680070090190004500820100040004602900050003028009300074040050036703018000",
-      s: "435269781682571493197834562826195347374682915951743628519326874248957136763418259"
-    }
-  ],
-  hard: [
-    {
-      p: "000000907000420180000705026100904000050000040000507009920108000034059000507000000",
-      s: "843261957795423186216795326172934865359816742468527319924178653634559271587642493"
-    }
-  ]
+  }
 };
 
-let currentPuzzle = null;
-let timerInterval = null;
-let elapsedSeconds = 0;
+/* ========= COMMANDERS ========= */
 
-function createBoard() {
-  const board = document.getElementById('board');
-  board.innerHTML = "";
+const COMMANDERS = {
+  BLITZ: {
+    id: 'BLITZ',
+    name: 'Бліцкриг',
+    description: 'Агресивний стиль: швидкий рух, тиск з перших ходів.',
+    army: ['ST','LT','LT','RC','PT'],
+    abilityName: 'Прорив',
+    abilityCost: 3,
+    abilityCooldown: 4
+  },
+  WALL: {
+    id: 'WALL',
+    name: 'Сталева стіна',
+    description: 'Оборона й посилений захист в укриттях.',
+    army: ['TT','TT','ST','PT','RC'],
+    abilityName: 'Укріплення',
+    abilityCost: 3,
+    abilityCooldown: 4
+  },
+  ARTY: {
+    id: 'ARTY',
+    name: 'Маршал артилерії',
+    description: 'Гра від дистанції та артударів.',
+    army: ['TT','ST','RC','AT','PT'],
+    abilityName: 'Контрбатарея',
+    abilityCost: 3,
+    abilityCooldown: 3
+  },
+  SCOUT: {
+    id: 'SCOUT',
+    name: 'Майстер розвідки',
+    description: 'Максимальний контроль карти і туману війни.',
+    army: ['LT','LT','RC','ST','PT'],
+    abilityName: 'Глобальний дозор',
+    abilityCost: 3,
+    abilityCooldown: 4
+  }
+};
 
-  for (let i = 0; i < 81; i++) {
-    const input = document.createElement('input');
-    input.type = "text";
-    input.maxLength = 1;
-    input.className = "cell";
-    input.dataset.index = i;
+/* ========= STATE ========= */
 
-    const row = Math.floor(i / 9);
-    const col = i % 9;
+const state = {
+  grid: [],
+  tanks: [],
+  currentPlayer: 1,
+  turnNumber: 1,
+  selectedTankId: null,
+  reachableCells: new Set(),
+  attackableCells: new Set(),
+  visibleTiles: { 1: new Set(), 2: new Set() },
+  gameOver: false,
+  commander: { 1: 'BLITZ', 2: 'WALL' },
+  commanderCooldown: { 1: 0, 2: 0 },
+  playerEnergy: { 1: 3, 2: 3 },
+  commanderEffects: { 1: {}, 2: {} }
+};
 
-    // Толстые границы между 3×3 блоками
-    if (col === 3 || col === 6) {
-      input.style.borderLeftWidth = "3px";
+let nextTankId = 1;
+
+/* ========= GRID ========= */
+
+function randomTerrain() {
+  const r = Math.random();
+  const c = CONFIG.terrainChances;
+  if (r < c.forest) return 'forest';
+  if (r < c.forest + c.hill) return 'hill';
+  if (r < c.forest + c.hill + c.water) return 'water';
+  if (r < c.forest + c.hill + c.water + c.city) return 'city';
+  return 'plain';
+}
+
+function createGrid() {
+  const grid = [];
+  for (let y = 0; y < CONFIG.gridHeight; y++) {
+    const row = [];
+    for (let x = 0; x < CONFIG.gridWidth; x++) {
+      row.push({ x, y, terrain: randomTerrain() });
     }
-    if (col === 2 || col === 5) {
-      input.style.borderRightWidth = "3px";
+    grid.push(row);
+  }
+  // спавн-ряди без води
+  for (let y of [0,1, CONFIG.gridHeight-1, CONFIG.gridHeight-2]) {
+    for (let x = 0; x < CONFIG.gridWidth; x++) {
+      if (grid[y][x].terrain === 'water') grid[y][x].terrain = 'plain';
     }
-    if (row === 3 || row === 6) {
-      input.style.borderTopWidth = "3px";
-    }
-    if (row === 2 || row === 5) {
-      input.style.borderBottomWidth = "3px";
-    }
+  }
+  return grid;
+}
 
-    input.addEventListener('input', onCellInput);
-    input.addEventListener('keydown', onCellKeyDown);
+function getTile(x, y) {
+  if (y < 0 || y >= CONFIG.gridHeight || x < 0 || x >= CONFIG.gridWidth) return null;
+  return state.grid[y][x];
+}
 
-    board.appendChild(input);
+/* ========= TANK HELPERS ========= */
+
+function createTank(typeCode, playerId, x, y) {
+  const def = CONFIG.tankDefs[typeCode];
+  return {
+    id: nextTankId++,
+    type: typeCode,
+    owner: playerId,
+    name: def.name,
+    x,
+    y,
+    health: def.maxHealth,
+    actionPoints: def.actionPointsMax,
+    alive: true
+  };
+}
+
+function getTankById(id) {
+  return state.tanks.find(t => t.id === id && t.alive);
+}
+function getTankAt(x, y) {
+  return state.tanks.find(t => t.alive && t.x === x && t.y === y);
+}
+function tanksOfPlayer(playerId) {
+  return state.tanks.filter(t => t.alive && t.owner === playerId);
+}
+function enemyTanksOfPlayer(playerId) {
+  return state.tanks.filter(t => t.alive && t.owner !== playerId);
+}
+
+/* ========= EFFECTIVE STATS ========= */
+
+function getTankEffectiveStats(tank) {
+  const base = CONFIG.tankDefs[tank.type];
+  let moveRange = base.moveRange;
+  let attackRange = base.attackRange;
+  let visionRange = base.visionRange;
+  const cid = state.commander[tank.owner];
+  const turn = state.turnNumber;
+  const effects = state.commanderEffects[tank.owner] || {};
+
+  if (cid === 'BLITZ') {
+    if (turn <= 2) moveRange += 1;
+    if (effects.rushMoveBonus) moveRange += effects.rushMoveBonus;
+  }
+  if (cid === 'ARTY') {
+    if (tank.type === 'AT') attackRange += 1;
+  }
+  if (cid === 'SCOUT') {
+    if (tank.type === 'LT' || tank.type === 'RC') visionRange += 2;
+  }
+  // WALL пасивна оборона в combat
+
+  return { ...base, moveRange, attackRange, visionRange };
+}
+
+/* ========= STARTING TANKS ========= */
+
+function placeStartingTanks() {
+  state.tanks = [];
+  nextTankId = 1;
+
+  // Player 1 (верх)
+  const army1 = COMMANDERS[state.commander[1]].army;
+  let p1Row = 0;
+  let p1X = 0;
+  for (let type of army1) {
+    while (true) {
+      const tile = getTile(p1X, p1Row);
+      if (tile.terrain !== 'water' && !getTankAt(p1X, p1Row)) {
+        state.tanks.push(createTank(type, 1, p1X, p1Row));
+        p1X++;
+        if (p1X >= CONFIG.gridWidth) {
+          p1X = 0;
+          p1Row++;
+        }
+        break;
+      } else {
+        p1X++;
+        if (p1X >= CONFIG.gridWidth) {
+          p1X = 0;
+          p1Row++;
+        }
+      }
+    }
+  }
+
+  // Player 2 (низ)
+  const army2 = COMMANDERS[state.commander[2]].army;
+  let p2Row = CONFIG.gridHeight - 1;
+  let p2X = CONFIG.gridWidth - 1;
+  for (let type of army2) {
+    while (true) {
+      const tile = getTile(p2X, p2Row);
+      if (tile.terrain !== 'water' && !getTankAt(p2X, p2Row)) {
+        state.tanks.push(createTank(type, 2, p2X, p2Row));
+        p2X--;
+        if (p2X < 0) {
+          p2X = CONFIG.gridWidth - 1;
+          p2Row--;
+        }
+        break;
+      } else {
+        p2X--;
+        if (p2X < 0) {
+          p2X = CONFIG.gridWidth - 1;
+          p2Row--;
+        }
+      }
+    }
   }
 }
 
-function onCellInput(e) {
-  const cell = e.target;
-  let val = cell.value.replace(/[^1-9]/g, "");
-  if (val.length > 1) val = val[0];
-  cell.value = val;
-  cell.classList.remove('error');
-  setStatus("");
+/* ========= VISION / FOG ========= */
+
+function computeVisionForPlayer(playerId) {
+  const visible = new Set();
+  const myTanks = tanksOfPlayer(playerId);
+  const cid = state.commander[playerId];
+  const effects = state.commanderEffects[playerId] || {};
+  const globalVision = (cid === 'SCOUT' && effects.globalVision === true);
+
+  if (globalVision) {
+    for (let y = 0; y < CONFIG.gridHeight; y++) {
+      for (let x = 0; x < CONFIG.gridWidth; x++) {
+        visible.add(`${x},${y}`);
+      }
+    }
+    return visible;
+  }
+
+  for (const tank of myTanks) {
+    const stats = getTankEffectiveStats(tank);
+    const range = stats.visionRange || 4;
+
+    for (let dy = -range; dy <= range; dy++) {
+      for (let dx = -range; dx <= range; dx++) {
+        const x = tank.x + dx;
+        const y = tank.y + dy;
+        const tile = getTile(x, y);
+        if (!tile) continue;
+        const dist = Math.abs(dx) + Math.abs(dy);
+        if (dist <= range) visible.add(`${x},${y}`);
+      }
+    }
+  }
+  return visible;
 }
 
-function onCellKeyDown(e) {
-  const index = Number(e.target.dataset.index);
-  if (e.key === "ArrowRight") {
-    focusCell((index + 1) % 81);
-    e.preventDefault();
-  } else if (e.key === "ArrowLeft") {
-    focusCell((index + 80) % 81); // -1 mod 81
-    e.preventDefault();
-  } else if (e.key === "ArrowDown") {
-    focusCell((index + 9) % 81);
-    e.preventDefault();
-  } else if (e.key === "ArrowUp") {
-    focusCell((index + 72) % 81); // -9 mod 81
-    e.preventDefault();
-  } else if (e.key === "Backspace" || e.key === "Delete") {
-    if (!e.target.classList.contains('given')) {
-      e.target.value = "";
-      e.target.classList.remove('error');
+function updateVision() {
+  state.visibleTiles[1] = computeVisionForPlayer(1);
+  state.visibleTiles[2] = computeVisionForPlayer(2);
+}
+
+/* ========= PATHFINDING ========= */
+
+function isWalkable(tile) {
+  if (!tile) return false;
+  if (tile.terrain === 'water') return false;
+  if (getTankAt(tile.x, tile.y)) return false;
+  return true;
+}
+
+function computeReachableCells(tank) {
+  const stats = getTankEffectiveStats(tank);
+  const maxSteps = stats.moveRange;
+  const visited = new Set();
+  const result = new Set();
+  const queue = [{ x: tank.x, y: tank.y, dist: 0 }];
+  visited.add(`${tank.x},${tank.y}`);
+
+  while (queue.length > 0) {
+    const {x,y,dist} = queue.shift();
+    if (dist > 0 && dist <= maxSteps) result.add(`${x},${y}`);
+    if (dist === maxSteps) continue;
+
+    const deltas = [
+      {dx:1,dy:0},{dx:-1,dy:0},{dx:0,dy:1},{dx:0,dy:-1}
+    ];
+    for (const d of deltas) {
+      const nx = x + d.dx;
+      const ny = y + d.dy;
+      const key = `${nx},${ny}`;
+      if (visited.has(key)) continue;
+      const tile = getTile(nx, ny);
+      if (!tile) continue;
+      if (!isWalkable(tile)) continue;
+      visited.add(key);
+      queue.push({x:nx,y:ny,dist:dist+1});
     }
+  }
+  return result;
+}
+
+/* ========= COMBAT ========= */
+
+function manhattan(a,b) {
+  return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
+}
+
+function getAttackableCells(tank) {
+  const stats = getTankEffectiveStats(tank);
+  const range = stats.attackRange;
+  const cells = new Set();
+  const enemies = enemyTanksOfPlayer(tank.owner);
+  const visible = state.visibleTiles[tank.owner];
+
+  for (const enemy of enemies) {
+    const dist = manhattan(tank, enemy);
+    if (dist <= range && visible.has(`${enemy.x},${enemy.y}`)) {
+      cells.add(`${enemy.x},${enemy.y}`);
+    }
+  }
+  return cells;
+}
+
+function attackTank(attacker, target) {
+  const stats = getTankEffectiveStats(attacker);
+  const baseDamage =
+    stats.minDamage + Math.floor(Math.random() * (stats.maxDamage - stats.minDamage + 1));
+
+  let modifier = 1;
+  const tile = getTile(target.x, target.y);
+  if (tile.terrain === 'forest') modifier *= 0.8;
+  if (tile.terrain === 'city')   modifier *= 0.75;
+  if (tile.terrain === 'hill')   modifier *= 0.9;
+
+  const defenderCommander = state.commander[target.owner];
+  if (defenderCommander === 'WALL' &&
+      (tile.terrain === 'forest' || tile.terrain === 'city')) {
+    modifier *= 0.9;
+  }
+
+  const defEffects = state.commanderEffects[target.owner] || {};
+  if (defEffects.ironSkinActive && (target.type === 'TT' || target.type === 'ST')) {
+    modifier *= 0.5;
+  }
+
+  let dmg = Math.max(1, Math.round(baseDamage * modifier));
+
+  const atkEffects = state.commanderEffects[attacker.owner] || {};
+  const atkCommander = state.commander[attacker.owner];
+  if (atkCommander === 'ARTY' && atkEffects.artyNextShotBuff && attacker.type === 'AT') {
+    dmg = Math.max(1, baseDamage + 2);
+    atkEffects.artyNextShotBuff = false;
+  }
+
+  target.health -= dmg;
+
+  // визуальный эффект попадания
+  const cells = document.querySelectorAll('.cell');
+  for (const c of cells) {
+    if (+c.dataset.x === target.x && +c.dataset.y === target.y) {
+      const tankEl = c.querySelector('.tank');
+      if (tankEl) {
+        tankEl.classList.add('tank-hit');
+        setTimeout(() => tankEl.classList.remove('tank-hit'), 180);
+      }
+      break;
+    }
+  }
+
+  addLog(`Танк ${attacker.type} гравця ${attacker.owner} вдарив ${target.type} (${target.owner}) на ${dmg} шкоди.`);
+
+  if (target.health <= 0) {
+    target.alive = false;
+    addLog(`Танк ${target.type} гравця ${target.owner} знищено!`);
+    addEnergy(attacker.owner, 1);
   }
 }
 
-function focusCell(i) {
-  const cells = document.querySelectorAll('.cell');
-  if (cells[i]) cells[i].focus();
+/* ========= ENERGY ========= */
+
+function addEnergy(playerId, amount) {
+  const maxEnergy = 10;
+  state.playerEnergy[playerId] = Math.min(
+    maxEnergy,
+    state.playerEnergy[playerId] + amount
+  );
 }
 
-function loadRandomPuzzle() {
-  const difficulty = document.getElementById('difficulty').value;
-  const pool = puzzles[difficulty];
-  const idx = Math.floor(Math.random() * pool.length);
-  currentPuzzle = pool[idx];
+function spendEnergy(playerId, amount) {
+  if (state.playerEnergy[playerId] < amount) return false;
+  state.playerEnergy[playerId] -= amount;
+  return true;
+}
 
-  const p = currentPuzzle.p;
-  const cells = document.querySelectorAll('.cell');
+/* ========= TURN / FLOW ========= */
 
-  cells.forEach((cell, i) => {
-    const char = p[i];
-    cell.classList.remove('given', 'error');
-    cell.disabled = false;
+function resetActionPointsForPlayer(playerId) {
+  for (const t of tanksOfPlayer(playerId)) {
+    const def = CONFIG.tankDefs[t.type];
+    t.actionPoints = def.actionPointsMax;
+  }
+}
 
-    if (char !== "0" && char !== ".") {
-      cell.value = char;
-      cell.disabled = true;
-      cell.classList.add('given');
+function clearCommanderEffects() {
+  state.commanderEffects[1] = {};
+  state.commanderEffects[2] = {};
+}
+
+function endTurn() {
+  if (state.gameOver) return;
+
+  addEnergy(state.currentPlayer, 1);
+
+  state.selectedTankId = null;
+  state.reachableCells.clear();
+  state.attackableCells.clear();
+
+  if (state.commanderCooldown[state.currentPlayer] > 0) {
+    state.commanderCooldown[state.currentPlayer]--;
+  }
+
+  state.currentPlayer = state.currentPlayer === 1 ? 2 : 1;
+  if (state.currentPlayer === 1) state.turnNumber++;
+
+  clearCommanderEffects();
+  resetActionPointsForPlayer(state.currentPlayer);
+  updateVision();
+  checkGameOver();
+  render();
+}
+
+function checkGameOver() {
+  const p1Alive = tanksOfPlayer(1).length > 0;
+  const p2Alive = tanksOfPlayer(2).length > 0;
+
+  if (!p1Alive || !p2Alive || state.turnNumber > CONFIG.maxTurns) {
+    state.gameOver = true;
+    if (!p1Alive && !p2Alive) {
+      addLog('Нічия: обидві армії знищені.');
+    } else if (!p1Alive) {
+      addLog('Гравець 2 переміг!');
+    } else if (!p2Alive) {
+      addLog('Гравець 1 переміг!');
     } else {
-      cell.value = "";
+      addLog('Ліміт ходів вичерпано. Потрібно рахувати очки (HP/контроль зон).');
     }
-  });
-
-  resetTimer();
-  startTimer();
-  setStatus("Новая задача загружена.", "ok");
+  }
 }
 
-function checkSolution() {
-  if (!currentPuzzle) return;
-  const solution = currentPuzzle.s;
-  const cells = document.querySelectorAll('.cell');
+/* ========= COMMANDER ABILITY ========= */
 
-  let errors = 0;
-  let empty = 0;
+function useCommanderAbility(playerId) {
+  if (state.gameOver) return;
+  if (state.currentPlayer !== playerId) {
+    addLog('Здібність командира можна використовувати тільки у свій хід.');
+    return;
+  }
+  const cid = state.commander[playerId];
+  const cfg = COMMANDERS[cid];
+  if (!cfg) return;
 
-  cells.forEach((cell, i) => {
-    if (cell.disabled) return;
-    const val = cell.value;
-    if (!val) {
-      empty++;
-      cell.classList.remove('error');
+  if (state.commanderCooldown[playerId] > 0) {
+    addLog(`Здібність командира ще не готова. Залишилось ходів: ${state.commanderCooldown[playerId]}.`);
+    return;
+  }
+  if (!spendEnergy(playerId, cfg.abilityCost)) {
+    addLog('Недостатньо енергії для здібності командира.');
+    return;
+  }
+
+  const effects = state.commanderEffects[playerId];
+
+  if (cid === 'BLITZ') {
+    effects.rushMoveBonus = 2;
+    addLog('Командир Бліцкриг: Прорив! Усі танки отримали +2 до руху на цей хід.');
+  } else if (cid === 'WALL') {
+    effects.ironSkinActive = true;
+    addLog('Командир Сталева стіна: Укріплення! TT та ST отримали зменшення шкоди на цей хід.');
+  } else if (cid === 'ARTY') {
+    effects.artyNextShotBuff = true;
+    addLog('Маршал артилерії: Контрбатарея! Наступний постріл артилерії посилено.');
+  } else if (cid === 'SCOUT') {
+    effects.globalVision = true;
+    addLog('Майстер розвідки: Глобальний дозор! На цей хід відкрито всю карту.');
+  }
+
+  state.commanderCooldown[playerId] = cfg.abilityCooldown;
+  updateVision();
+  render();
+}
+
+/* ========= RENDER ========= */
+
+const boardEl = document.getElementById('board');
+const turnInfoEl = document.getElementById('turnInfo');
+const selectedInfoEl = document.getElementById('selectedInfo');
+const logEl = document.getElementById('log');
+const energyInfoEl = document.getElementById('energyInfo');
+
+function render() {
+  boardEl.innerHTML = '';
+
+  const currentPlayer = state.currentPlayer;
+  const visible = state.visibleTiles[currentPlayer];
+
+  for (let y = 0; y < CONFIG.gridHeight; y++) {
+    for (let x = 0; x < CONFIG.gridWidth; x++) {
+      const tile = getTile(x,y);
+      const cell = document.createElement('div');
+      cell.classList.add('cell');
+
+      if (tile.terrain === 'plain')  cell.classList.add('terrain-plain');
+      if (tile.terrain === 'forest') cell.classList.add('terrain-forest');
+      if (tile.terrain === 'hill')   cell.classList.add('terrain-hill');
+      if (tile.terrain === 'water')  cell.classList.add('terrain-water');
+      if (tile.terrain === 'city')   cell.classList.add('terrain-city');
+
+      const visKey = `${x},${y}`;
+      if (!visible.has(visKey)) cell.classList.add('fog');
+
+      const tank = state.tanks.find(t => t.alive && t.x === x && t.y === y);
+      if (tank && visible.has(visKey)) {
+        const tankDiv = document.createElement('div');
+        tankDiv.classList.add('tank', tank.owner === 1 ? 'p1' : 'p2');
+        tankDiv.dataset.type = tank.type;
+
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('viewBox', '0 0 64 64');
+        const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+        use.setAttributeNS('http://www.w3.org/1999/xlink', 'href', `#icon-tank-${tank.type}`);
+        svg.appendChild(use);
+        svg.style.color = '#020617';
+        tankDiv.appendChild(svg);
+
+        if (tank.id === state.selectedTankId) cell.classList.add('selected');
+        cell.appendChild(tankDiv);
+      }
+
+      if (state.reachableCells.has(visKey)) cell.classList.add('move-highlight');
+      if (state.attackableCells.has(visKey)) cell.classList.add('attack-highlight');
+
+      cell.dataset.x = x;
+      cell.dataset.y = y;
+      cell.addEventListener('click', onCellClick);
+      boardEl.appendChild(cell);
+    }
+  }
+
+  renderHud();
+}
+
+function renderHud() {
+  const cid1 = state.commander[1];
+  const cid2 = state.commander[2];
+  const currentCommander = COMMANDERS[state.commander[state.currentPlayer]];
+
+  turnInfoEl.innerHTML = `
+    <div class="stat-line">
+      <span class="tag">Гравець: ${state.currentPlayer}</span>
+      <span class="tag">Хід: ${state.turnNumber} / ${CONFIG.maxTurns}</span>
+    </div>
+    <div class="stat-line">
+      Командир P1: ${COMMANDERS[cid1].name} | Командир P2: ${COMMANDERS[cid2].name}
+    </div>
+    <div class="stat-line">
+      Танків P1: ${tanksOfPlayer(1).length} | Танків P2: ${tanksOfPlayer(2).length}
+    </div>
+    <div class="stat-line">
+      КД здібності P${state.currentPlayer}: ${state.commanderCooldown[state.currentPlayer]}
+    </div>
+  `;
+
+  energyInfoEl.textContent =
+    `Енергія P1: ${state.playerEnergy[1]} / 10 | Енергія P2: ${state.playerEnergy[2]} / 10`;
+
+  commanderAbilityBtn.disabled = !!state.gameOver
+    || state.commanderCooldown[state.currentPlayer] > 0
+    || state.playerEnergy[state.currentPlayer] < currentCommander.abilityCost;
+  endTurnBtn.disabled = !!state.gameOver;
+  aiMoveBtn.disabled = !!state.gameOver || state.currentPlayer !== 2;
+
+  if (!state.selectedTankId) {
+    selectedInfoEl.textContent = 'Нічого не вибрано';
+    return;
+  }
+  const t = getTankById(state.selectedTankId);
+  if (!t) {
+    selectedInfoEl.textContent = 'Нічого не вибрано';
+    return;
+  }
+  const stats = getTankEffectiveStats(t);
+  selectedInfoEl.innerHTML = `
+    <div><b>${t.name}</b> (${t.type}), власник: ${t.owner}</div>
+    <div>HP: ${t.health} / ${stats.maxHealth}</div>
+    <div>ОД: ${t.actionPoints} / ${stats.actionPointsMax}</div>
+    <div>Рух: ${stats.moveRange}, Атака: ${stats.attackRange}</div>
+    <div>Огляд: ${stats.visionRange}</div>
+    <div style="margin-top:4px;font-size:11px;opacity:0.8;">
+      Клік по зеленій клітинці — рух.<br/>
+      Клік по червоній клітинці — атака (мін. 2 ОД).<br/>
+      Клік по іншому своєму танку — вибір нового.
+    </div>
+  `;
+}
+
+/* ========= LOG ========= */
+
+function addLog(text) {
+  const div = document.createElement('div');
+  div.classList.add('log-entry');
+  div.textContent = text;
+  logEl.prepend(div);
+}
+
+/* ========= INPUT ========= */
+
+function onCellClick(e) {
+  if (state.gameOver) return;
+  const x = parseInt(e.currentTarget.dataset.x, 10);
+  const y = parseInt(e.currentTarget.dataset.y, 10);
+  const currentPlayer = state.currentPlayer;
+  const selected = state.selectedTankId ? getTankById(state.selectedTankId) : null;
+  const clickedTank = getTankAt(x,y);
+  const key = `${x},${y}`;
+
+  if (clickedTank && clickedTank.owner === currentPlayer) {
+    if (!clickedTank.alive) return;
+    if (clickedTank.actionPoints <= 0) {
+      addLog('У цього танка немає ОД.');
+    }
+    state.selectedTankId = clickedTank.id;
+    state.reachableCells = computeReachableCells(clickedTank);
+    state.attackableCells = getAttackableCells(clickedTank);
+    render();
+    return;
+  }
+
+  if (selected && selected.owner === currentPlayer && selected.actionPoints > 0) {
+    if (state.reachableCells.has(key)) {
+      const dist = manhattan(selected, {x,y});
+      if (dist <= selected.actionPoints) {
+        selected.x = x;
+        selected.y = y;
+        selected.actionPoints -= dist;
+        addLog(`Танк ${selected.type} (${selected.owner}) перемістився на (${x},${y}).`);
+        state.reachableCells = computeReachableCells(selected);
+        state.attackableCells = getAttackableCells(selected);
+        updateVision();
+        render();
+      } else {
+        addLog('Не вистачає ОД для такого руху.');
+      }
       return;
     }
-    if (val !== solution[i]) {
-      cell.classList.add('error');
-      errors++;
-    } else {
-      cell.classList.remove('error');
+
+    if (state.attackableCells.has(key)) {
+      if (selected.actionPoints < 2) {
+        addLog('Для атаки потрібно мінімум 2 ОД.');
+        return;
+      }
+      const target = enemyTanksOfPlayer(currentPlayer).find(t => t.x === x && t.y === y);
+      if (!target) return;
+      selected.actionPoints -= 2;
+      attackTank(selected, target);
+      updateVision();
+      state.attackableCells = getAttackableCells(selected);
+      state.reachableCells = computeReachableCells(selected);
+      checkGameOver();
+      render();
+      return;
     }
-  });
-
-  if (errors === 0 && empty === 0) {
-    stopTimer();
-    setStatus("Идеально. Судоку решено корректно.", "ok");
-  } else if (errors === 0 && empty > 0) {
-    setStatus("Ошибок нет, но поле ещё не заполнено.", "warn");
-  } else {
-    setStatus(`Ошибки: ${errors}. Подчёркнутые клетки проверь ещё раз.`, "err");
   }
 }
 
-function solvePuzzle() {
-  if (!currentPuzzle) return;
-  const solution = currentPuzzle.s;
-  const cells = document.querySelectorAll('.cell');
+/* ========= SIMPLE AI (Player 2) ========= */
 
-  cells.forEach((cell, i) => {
-    cell.value = solution[i];
-    cell.classList.remove('error');
-  });
-
-  stopTimer();
-  setStatus("Решение подставлено. Можно брать как эталон.", "warn");
-}
-
-/* Таймер */
-
-function startTimer() {
-  stopTimer();
-  elapsedSeconds = 0;
-  updateTimerLabel();
-  timerInterval = setInterval(() => {
-    elapsedSeconds++;
-    updateTimerLabel();
-  }, 1000);
-}
-
-function resetTimer() {
-  stopTimer();
-  elapsedSeconds = 0;
-  updateTimerLabel();
-}
-
-function stopTimer() {
-  if (timerInterval) {
-    clearInterval(timerInterval);
-    timerInterval = null;
+function aiMoveForPlayer2() {
+  if (state.gameOver) return;
+  if (state.currentPlayer !== 2) {
+    addLog('Зараз не хід Player 2.');
+    return;
   }
+
+  if (state.commanderCooldown[2] === 0 &&
+      state.playerEnergy[2] >= COMMANDERS[state.commander[2]].abilityCost) {
+    if (Math.random() < 0.7) {
+      useCommanderAbility(2);
+    }
+  }
+
+  const myTanks = tanksOfPlayer(2);
+  const enemies = tanksOfPlayer(1);
+  if (myTanks.length === 0 || enemies.length === 0) return;
+
+  for (const t of myTanks) {
+    if (!t.alive) continue;
+    const stats = getTankEffectiveStats(t);
+
+    let safetyCounter = 0;
+    while (t.actionPoints > 0 && safetyCounter < 10 && !state.gameOver) {
+      safetyCounter++;
+      updateVision();
+      const visibleEnemies = enemies.filter(e => state.visibleTiles[2].has(`${e.x},${e.y}`));
+
+      let target = null;
+      let bestScore = Infinity;
+      for (const e of visibleEnemies) {
+        const d = manhattan(t, e);
+        if (d <= stats.attackRange) {
+          const score = e.health + d * 2;
+          if (score < bestScore) {
+            bestScore = score;
+            target = e;
+          }
+        }
+      }
+
+      if (target && t.actionPoints >= 2) {
+        attackTank(t, target);
+        t.actionPoints -= 2;
+        checkGameOver();
+        if (state.gameOver) break;
+        continue;
+      }
+
+      if (visibleEnemies.length > 0 && t.actionPoints > 0) {
+        let nearest = null;
+        let distMin = Infinity;
+        for (const e of visibleEnemies) {
+          const d = manhattan(t, e);
+          if (d < distMin) {
+            distMin = d;
+            nearest = e;
+          }
+        }
+        if (nearest) {
+          const dx = Math.sign(nearest.x - t.x);
+          const dy = Math.sign(nearest.y - t.y);
+
+          let nx = t.x + dx;
+          let ny = t.y;
+          let tile = getTile(nx, ny);
+          if (tile && isWalkable(tile) && t.actionPoints > 0) {
+            t.x = nx;
+            t.y = ny;
+            t.actionPoints -= 1;
+            addLog(`ІІ рухає ${t.type} до ворога.`);
+            continue;
+          }
+          nx = t.x;
+          ny = t.y + dy;
+          tile = getTile(nx, ny);
+          if (tile && isWalkable(tile) && t.actionPoints > 0) {
+            t.x = nx;
+            t.y = ny;
+            t.actionPoints -= 1;
+            addLog(`ІІ рухає ${t.type} до ворога.`);
+            continue;
+          }
+          break;
+        }
+      } else {
+        break;
+      }
+    }
+  }
+
+  updateVision();
+  checkGameOver();
+  render();
 }
 
-function updateTimerLabel() {
-  const m = String(Math.floor(elapsedSeconds / 60)).padStart(2, "0");
-  const s = String(elapsedSeconds % 60).padStart(2, "0");
-  document.getElementById('timer').textContent = `${m}:${s}`;
+/* ========= INIT / NEW GAME ========= */
+
+const startBtn = document.getElementById('startBtn');
+const endTurnBtn = document.getElementById('endTurnBtn');
+const aiMoveBtn = document.getElementById('aiMoveBtn');
+const resetBtn = document.getElementById('resetBtn');
+const commanderAbilityBtn = document.getElementById('commanderAbilityBtn');
+
+function newGame() {
+  const selP1 = document.getElementById('commanderP1').value;
+  const selP2 = document.getElementById('commanderP2').value;
+  state.commander[1] = selP1 in COMMANDERS ? selP1 : 'BLITZ';
+  state.commander[2] = selP2 in COMMANDERS ? selP2 : 'WALL';
+
+  state.grid = createGrid();
+  placeStartingTanks();
+  state.currentPlayer = 1;
+  state.turnNumber = 1;
+  state.selectedTankId = null;
+  state.gameOver = false;
+  state.reachableCells = new Set();
+  state.attackableCells = new Set();
+  state.commanderCooldown[1] = 0;
+  state.commanderCooldown[2] = 0;
+  state.playerEnergy[1] = 3;
+  state.playerEnergy[2] = 3;
+  clearCommanderEffects();
+  updateVision();
+  logEl.innerHTML = '';
+  addLog(`Нова гра. Player 1 починає. Командири: P1 — ${COMMANDERS[state.commander[1]].name}, P2 — ${COMMANDERS[state.commander[2]].name}.`);
+  render();
 }
 
-/* Статус */
+/* ========= BUTTONS ========= */
 
-function setStatus(text, type = "") {
-  const el = document.getElementById('status');
-  el.textContent = text || "";
-  el.className = "status" + (type ? " " + type : "");
-}
-
-/* Инициализация */
-
-window.addEventListener('DOMContentLoaded', () => {
-  createBoard();
-
-  document.getElementById('newGame').addEventListener('click', loadRandomPuzzle);
-  document.getElementById('check').addEventListener('click', checkSolution);
-  document.getElementById('solve').addEventListener('click', solvePuzzle);
-  document.getElementById('difficulty').addEventListener('change', loadRandomPuzzle);
-
-  // Автостарт первой игры
-  loadRandomPuzzle();
+startBtn.addEventListener('click', () => {
+  newGame();
 });
+endTurnBtn.addEventListener('click', () => {
+  endTurn();
+});
+aiMoveBtn.addEventListener('click', () => {
+  if (state.currentPlayer !== 2) {
+    addLog('Спочатку передай хід Player 2.');
+    return;
+  }
+  aiMoveForPlayer2();
+  render();
+});
+resetBtn.addEventListener('click', () => {
+  newGame();
+});
+commanderAbilityBtn.addEventListener('click', () => {
+  useCommanderAbility(state.currentPlayer);
+});
+
+addLog('Обери командирів та натисни «Нова гра», щоб почати бій.');
 </script>
 </body>
 </html>
