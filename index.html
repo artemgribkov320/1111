@@ -1021,9 +1021,8 @@ function resetActionPointsForPlayer(playerId) {
   }
 }
 
-function clearCommanderEffects() {
-  state.commanderEffects[1] = {};
-  state.commanderEffects[2] = {};
+function clearCommanderEffectsForPlayer(playerId) {
+  state.commanderEffects[playerId] = {};
 }
 
 function endTurn() {
@@ -1042,7 +1041,7 @@ function endTurn() {
   state.currentPlayer = state.currentPlayer === 1 ? 2 : 1;
   if (state.currentPlayer === 1) state.turnNumber++;
 
-  clearCommanderEffects();
+  clearCommanderEffectsForPlayer(state.currentPlayer);
   resetActionPointsForPlayer(state.currentPlayer);
   updateVision();
   checkGameOver();
